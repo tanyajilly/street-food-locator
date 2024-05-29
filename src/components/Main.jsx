@@ -1,57 +1,49 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Search from "./Search";
-import FacilityType from "./FacilityType";
 import Map from "./Map";
 import Details from "./Details";
-import { fetchCsvData } from "../utils/csvUtils";
+import { useFetchTrucks } from "../hooks/useFetchTrucks";
 
 export default function Main() {
-    const [data, setData] = useState([]);
+    const { data, error, loading } = useFetchTrucks();
     const [selectedTruck, setSelectedTruck] = useState(null);
+    const [displayedData, setDisplayedData] = useState([]);
+
+    useEffect(() => {
+        setDisplayedData(data);
+    }, [data]);
+
+    const handleSearch = useCallback(
+        (query) => {
+            console.log(query);
+            const filteredList = data.filter((item) =>
+                item.food.includes(query)
+            );
+            setDisplayedData(filteredList);
+        },
+        [data]
+    );
 
     const handleMarkerClick = (id) => {
         setSelectedTruck(data.find((el) => el.id === id));
     };
 
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                const csvData = await fetchCsvData();
-                const filteredData = csvData
-                    .filter(
-                        (item) =>
-                            item.Status === "APPROVED" && item.Latitude !== "0"
-                    )
-                    .map((item, i) => {
-                        return {
-                            name: item.Applicant,
-                            type: item.FacilityType,
-                            id: i,
-                            food: item.FoodItems,
-                            location: [item.Latitude, item.Longitude],
-                            address: item.Address,
-                        };
-                    });
-                setData(filteredData);
-            } catch (error) {
-                console.error("Error loading CSV data:", error);
-            }
-        };
-
-        loadData();
-    }, []);
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error loading data: {error.message}</div>;
 
     return (
         <>
-            {/* <div className="flex mb-4">
-                <Search />
-                <FacilityType />
-            </div> */}
+            <div className="max-w-80 mx-auto mb-4">
+                <Search onSearch={handleSearch} />
+            </div>
             <div className="md:flex">
                 <div className="flex-1 overflow-hidden rounded-lg">
-                    <Map items={data} onMarkerClick={handleMarkerClick} />
+                    <Map
+                        items={displayedData}
+                        onMarkerClick={handleMarkerClick}
+                    />
                 </div>
-                <div className="flex-1 mt-6 md:ml-20 md:mt-0">
+                <div className="flex-1 mt-6 md:ml-10 md:mt-0">
                     <Details data={selectedTruck} />
                 </div>
             </div>
