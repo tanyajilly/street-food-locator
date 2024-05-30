@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Search from "./Search";
 import Map from "./Map";
 import Details from "./Details";
@@ -7,11 +7,7 @@ import { useFetchTrucks } from "../hooks/useFetchTrucks";
 export default function Main() {
     const { data, error, loading } = useFetchTrucks();
     const [selectedTruck, setSelectedTruck] = useState(null);
-    const [displayedData, setDisplayedData] = useState([]);
-
-    useEffect(() => {
-        setDisplayedData(data);
-    }, [data]);
+    const [displayedData, setDisplayedData] = useState(data);
 
     const handleSearch = useCallback(
         (query) => {
