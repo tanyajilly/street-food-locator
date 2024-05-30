@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Search from "./Search";
 import Map from "./Map";
 import Details from "./Details";
@@ -7,18 +7,16 @@ import { useFetchTrucks } from "../hooks/useFetchTrucks";
 export default function Main() {
     const { data, error, loading } = useFetchTrucks();
     const [selectedTruck, setSelectedTruck] = useState(null);
-    const [displayedData, setDisplayedData] = useState(data);
+    const [searchQuery, setSearchQuery] = useState("");
 
-    const handleSearch = useCallback(
-        (query) => {
-            console.log(query);
-            const filteredList = data.filter((item) =>
-                item.food.includes(query)
-            );
-            setDisplayedData(filteredList);
-        },
-        [data]
-    );
+    const displayedData = useMemo(() => {
+        if (!data) return [];
+        return data.filter((item) => item.food.includes(searchQuery));
+    }, [data, searchQuery]);
+
+    const handleSearch = useCallback((query) => {
+        setSearchQuery(query);
+    }, []);
 
     const handleMarkerClick = (id) => {
         setSelectedTruck(data.find((el) => el.id === id));
